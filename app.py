@@ -34,8 +34,9 @@ def upload(img_data: str, key: str, appointment_id: str) -> bool:
 
 
 def lambda_handler(event, context):
-    appointment_id = event["appointment_id"]
-    claim_yn = "Yes" if event["claim_yn"] == "y" else "No"
+    data = json.loads(event["body"])
+    appointment_id = data["appointment_id"]
+    claim_yn = "Yes" if data["claim_yn"] == "y" else "No"
 
     message = EmailMessage()
     message["From"] = SENDER
@@ -44,24 +45,24 @@ def lambda_handler(event, context):
     message["Subject"] = f"[UMEDI] Registered: Appointment ID {appointment_id}"
     body = f"""
     Booking Info:
-        - Hospital: {event['hospital']}
-        - Speciality: {event['speciality']}
-        - Date1: {event['candidate_dt1']}
-        - Date2: {event['candidate_dt2']}
+        - Hospital: {data['hospital']}
+        - Speciality: {data['speciality']}
+        - Date1: {data['candidate_dt1']}
+        - Date2: {data['candidate_dt2']}
     User Info:
-        - First Name: {event['first_name']}
-        - Last Name: {event['last_name']}
-        - Phone: {event['phone']}
-        - Email: {event['email']}
+        - First Name: {data['first_name']}
+        - Last Name: {data['last_name']}
+        - Phone: {data['phone']}
+        - Email: {data['email']}
         - Insurance Claim: {claim_yn}
-        - Gender: {event['gender']}
-        - Date of Birth: {event['date_of_birth']}
+        - Gender: {data['gender']}
+        - Date of Birth: {data['date_of_birth']}
     """
     message.set_content(body)
     
-    if event["claim_yn"] == "y":
+    if data["claim_yn"] == "y":
         try:
-            for index, img in enumerate(event["insurance_imgs"]):
+            for index, img in enumerate(data["insurance_imgs"]):
                 img_str = img.split(",")[1]
                 img_data = base64.b64decode(img_str)
                 key = "{}_insurance_{:03d}.jpg".format(appointment_id, index)
@@ -74,7 +75,7 @@ def lambda_handler(event, context):
                 )
                 upload(img_data, key=key, appointment_id=appointment_id)
 
-            for index, img in enumerate(event["additional_imgs"]):
+            for index, img in enumerate(data["additional_imgs"]):
                 img_str = img.split(",")[1]
                 img_data = base64.b64decode(img_str)
                 key = "{}_medical_{:03d}.jpg".format(appointment_id, index)
