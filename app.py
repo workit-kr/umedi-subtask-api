@@ -58,33 +58,32 @@ def lambda_handler(event, context):
     """
     message.set_content(body)
     
-    print(len(event["insurance_imgs"]))
-    print(event["insurance_imgs"])
+    if event["claim_yn"] == "y":
+        for index, img in enumerate(event["insurance_imgs"]):
+            img_str = img.split(",")[1]
+            img_data = base64.b64decode(img_str)
+            key = "{}_insurance_{:03d}.jpg".format(appointment_id, index)
 
+            message.add_attachment(
+                img_data,
+                maintype="image",
+                subtype="jpeg",
+                filename=key
+            )
+            upload(img_data, key=key)
 
-    for index, img in enumerate(event["insurance_imgs"]):
-        img_data = base64.b64decode(img[23:])
-        key = "{}_insurance_{:03d}.jpg".format(appointment_id, index)
+        for index, img in enumerate(event["additional_imgs"]):
+            img_str = img.split(",")[1]
+            img_data = base64.b64decode(img_str)
+            key = "{}_medical_{:03d}.jpg".format(appointment_id, index)
 
-        message.add_attachment(
-            img_data,
-            maintype="image",
-            subtype="jpeg",
-            filename=key
-        )
-        upload(img_data, key=key)
-
-    for index, img in enumerate(event["additional_imgs"]):
-        img_data = base64.b64decode(img[23:])
-        key = "{}_medical_{:03d}.jpg".format(appointment_id, index)
-
-        message.add_attachment(
-            img_data,
-            maintype="image",
-            subtype="jpeg",
-            filename=key
-        )
-        upload(img_data, key=key)
+            message.add_attachment(
+                img_data,
+                maintype="image",
+                subtype="jpeg",
+                filename=key
+            )
+            upload(img_data, key=key)
 
     mailserver.send_message(message)
     return {
