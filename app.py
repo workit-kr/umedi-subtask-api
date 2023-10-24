@@ -1,6 +1,7 @@
 import os
 import json
 import base64
+import traceback
 import smtplib
 import boto3
 
@@ -59,31 +60,38 @@ def lambda_handler(event, context):
     message.set_content(body)
     
     if event["claim_yn"] == "y":
-        for index, img in enumerate(event["insurance_imgs"]):
-            img_str = img.split(",")[1]
-            img_data = base64.b64decode(img_str)
-            key = "{}_insurance_{:03d}.jpg".format(appointment_id, index)
+        try:
+            for index, img in enumerate(event["insurance_imgs"]):
+                img_str = img.split(",")[1]
+                img_data = base64.b64decode(img_str)
+                key = "{}_insurance_{:03d}.jpg".format(appointment_id, index)
 
-            message.add_attachment(
-                img_data,
-                maintype="image",
-                subtype="jpeg",
-                filename=key
-            )
-            upload(img_data, key=key, appointment_id=appointment_id)
+                message.add_attachment(
+                    img_data,
+                    maintype="image",
+                    subtype="jpeg",
+                    filename=key
+                )
+                upload(img_data, key=key, appointment_id=appointment_id)
 
-        for index, img in enumerate(event["additional_imgs"]):
-            img_str = img.split(",")[1]
-            img_data = base64.b64decode(img_str)
-            key = "{}_medical_{:03d}.jpg".format(appointment_id, index)
+            for index, img in enumerate(event["additional_imgs"]):
+                img_str = img.split(",")[1]
+                img_data = base64.b64decode(img_str)
+                key = "{}_medical_{:03d}.jpg".format(appointment_id, index)
 
-            message.add_attachment(
-                img_data,
-                maintype="image",
-                subtype="jpeg",
-                filename=key
-            )
-            upload(img_data, key=key, appointment_id=appointment_id)
+                message.add_attachment(
+                    img_data,
+                    maintype="image",
+                    subtype="jpeg",
+                    filename=key
+                )
+                upload(img_data, key=key, appointment_id=appointment_id)
+        except Exception:
+            traceback.print_exc()
+            return {
+                'statusCode': 500,
+                'body': json.dumps({"message": "internal server error"})
+            }            
 
     mailserver.send_message(message)
     return {
