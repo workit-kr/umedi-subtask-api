@@ -9,6 +9,7 @@ from email.message import EmailMessage
 
 BUCKET = os.getenv("BUCKET")
 SENDER = os.getenv("SENDER")
+RECEIVER = os.getenv("RECEIVER")
 ACCESS_KEY = os.getenv("ACCESS_KEY")
 
 
@@ -37,7 +38,7 @@ def lambda_handler(event, context):
 
     message = EmailMessage()
     message["From"] = SENDER
-    message["To"] = event["email"]
+    message["To"] = RECEIVER
     
     message["Subject"] = f"[UMEDI] Registered: Appointment ID {appointment_id}"
     body = f"""
@@ -49,16 +50,21 @@ def lambda_handler(event, context):
     User Info:
         - First Name: {event['first_name']}
         - Last Name: {event['last_name']}
+        - Phone: {event['phone']}
+        - Email: {event['email']}
         - Insurance Claim: {claim_yn}
         - Gender: {event['gender']}
         - Date of Birth: {event['date_of_birth']}
     """
     message.set_content(body)
+    
+    print(len(event["insurance_imgs"]))
+    print(event["insurance_imgs"])
 
 
     for index, img in enumerate(event["insurance_imgs"]):
         img_data = base64.b64decode(img[23:])
-        key = "{}_insurance_{:03d}.jpg".format(appointment_id, appointment_id, index)
+        key = "{}_insurance_{:03d}.jpg".format(appointment_id, index)
 
         message.add_attachment(
             img_data,
@@ -70,7 +76,7 @@ def lambda_handler(event, context):
 
     for index, img in enumerate(event["additional_imgs"]):
         img_data = base64.b64decode(img[23:])
-        key = "{}_medical_{:03d}.jpg".format(appointment_id, appointment_id, index)
+        key = "{}_medical_{:03d}.jpg".format(appointment_id, index)
 
         message.add_attachment(
             img_data,
