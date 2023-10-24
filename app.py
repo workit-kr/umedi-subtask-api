@@ -70,7 +70,7 @@ def lambda_handler(event, context):
                 subtype="jpeg",
                 filename=key
             )
-            upload(img_data, key=key)
+            upload(img_data, key=key, appointment_id=appointment_id)
 
         for index, img in enumerate(event["additional_imgs"]):
             img_str = img.split(",")[1]
@@ -83,7 +83,7 @@ def lambda_handler(event, context):
                 subtype="jpeg",
                 filename=key
             )
-            upload(img_data, key=key)
+            upload(img_data, key=key, appointment_id=appointment_id)
 
     mailserver.send_message(message)
     return {
